@@ -1,0 +1,5 @@
+cesnet-tszoo>=2.2.0
+ipython
+numpy
+pandas
+matplotlib
