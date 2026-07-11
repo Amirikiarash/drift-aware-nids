@@ -13,16 +13,13 @@ measured on real traffic. That is what this repository does, step by step.
 
 `experiments/step1_benign_drift.py` quantifies week-over-week distribution shift
 in [CESNET-TimeSeries24](https://doi.org/10.1038/s41597-025-04603-x): 40 weeks of
-real ISP traffic from 275 institutions (Oct 2023 - Jul 2024). For 50 randomly
-selected institutions it computes the Jensen-Shannon divergence of the daily
-`n_flows` and `n_packets` distributions of every capture week against week 0
-(log-scaled, 60 shared histogram bins).
+real ISP traffic (Oct 2023 - Jul 2024). For 50 institutions, it computes the
+Jensen-Shannon divergence of the daily `n_flows` and `n_packets` distributions
+of every capture week against week 0 (log-scaled, 60 shared histogram bins).
 
-### Result
-
-Benign drift is real, sustained, and it aligns with the calendar. The
-most-shifted weeks reach ~0.19 bits of JS divergence with no attack involved,
-and they coincide with the Czech academic calendar:
+**Result.** Benign drift is real, sustained, and it aligns with the calendar.
+The most shifted weeks reach ~0.19 bits of JS divergence with no attack
+involved, and they coincide with the Czech academic calendar:
 
 | capture week | JS(n_flows) | likely event |
 |---|---|---|
@@ -30,33 +27,56 @@ and they coincide with the Czech academic calendar:
 | 32-33 | 0.13-0.19 | end of spring semester |
 | 38-39 | 0.16-0.155 | start of summer vacation |
 
-A detection model whose notion of "normal" is frozen at week 0 is already
-operating on a measurably different network by these weeks. Output plot and CSV
-are in `results/`.
+## Step 2 — What does that drift do to a static detector?
+
+`experiments/step2_detector_decay.py` freezes an IsolationForest on capture
+weeks 0-10 (per-institution features normalised with training-weeks statistics
+only), calibrates its threshold to a 1% alarm rate, and scores the remaining 29
+weeks. The traffic contains no labelled attacks, so every alarm is a false alarm.
+
+**Result.** The frozen detector's false-alarm rate inflates from the calibrated
+1% to a 9.6x higher average after the training period, averages **21.5%** on
+exactly the drift weeks identified in Step 1, and peaks near **40%** in week 33.
+Two independent measurements — a model-free distributional distance and a
+model's alarm behaviour — point to the same weeks. A detector whose notion of
+"normal" is frozen quietly turns benign drift into operator noise; this is the
+alert-fatigue failure mode that gets real detectors switched off.
+
+## Step 1b — Does the same happen in metropolitan mobile traffic?
+
+`experiments/step1b_telecom_italia.py` repeats the Step-1 measurement on the
+Telecom Italia dataset (Milan city cells, two months of the mobile operator
+traffic). Benign drift in call-volume distributions grows steadily, reaching
+~0.13 bits of JS divergence within eight weeks — the effect is not specific to
+fixed ISP networks.
 
 ## Run it
 
 ```bash
 pip install -r requirements.txt
 python experiments/step1_benign_drift.py
+python experiments/step2_detector_decay.py
+python experiments/step1b_telecom_italia.py
 ```
 
-The dataset part used here (~10 MB, institutions / 1-day aggregation) downloads
-automatically on first run via `cesnet-tszoo`. Set `CESNET_DATA_ROOT` to change
-the download directory.
+Datasets download automatically on first run via `cesnet-tszoo` (CESNET
+institutions/daily: ~10 MB; Telecom Italia: ~250 MB). Set `CESNET_DATA_ROOT`
+to change the download directory. Plots and CSV summaries are saved to `results/`.
 
 ## Roadmap
 
-- Step 2: label drift weeks with dated calendar events; show a baseline
-  detector's accuracy decaying across exactly these weeks.
 - Step 3: inject problem-space adversarial shift with logged ground truth and
-  test whether benign and adversarial shift are statistically separable online.
+  test whether benign and adversarial shifts are statistically separable online
+  (geometry, temporal signature, cross-view cost).
+- Step 4: a drift-source-aware detector that adapts to a benign shift under a
+  forgetting bound and resisting adversarial shift under an influence cap.
 
 ## Data
 
-Koumar, Hynek et al., *CESNET-TimeSeries24: Time Series Dataset for Network
-Traffic Anomaly Detection and Forecasting*, Scientific Data (2025).
-Loaded via the [cesnet-tszoo](https://github.com/CESNET/cesnet-tszoo) library.
+- Koumar, Hynek et al., *CESNET-TimeSeries24*, Scientific Data (2025).
+- Barlacchi et al., *A multi-source dataset of urban life in the city of Milan
+  and the Province of Trentino*, Scientific Data (2015) — Telecom Italia.
+- Loaded via the [cesnet-tszoo](https://github.com/CESNET/cesnet-tszoo) library.
 
 ## Author
 
