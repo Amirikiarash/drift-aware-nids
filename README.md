@@ -27,6 +27,9 @@ involved, and they coincide with the Czech academic calendar:
 | 32-33 | 0.13-0.19 | end of spring semester |
 | 38-39 | 0.16-0.155 | start of summer vacation |
 
+![Benign drift in CESNET-TimeSeries24](results/cesnet_drift_week_over_week.png)
+<img width="1650" height="750" alt="cesnet_drift_week_over_week" src="https://github.com/user-attachments/assets/e501e83d-96f9-4a14-9abc-b000015ac031" />
+
 ## Step 2 — What does that drift do to a static detector?
 
 `experiments/step2_detector_decay.py` freezes an IsolationForest on capture
@@ -41,6 +44,9 @@ Two independent measurements — a model-free distributional distance and a
 model's alarm behaviour — point to the same weeks. A detector whose notion of
 "normal" is frozen quietly turns benign drift into operator noise; this is the
 alert-fatigue failure mode that gets real detectors switched off.
+
+![Static detector decay](results/step2_detector_decay.png)
+<img width="1650" height="750" alt="step2_detector_decay" src="https://github.com/user-attachments/assets/a947624f-806e-48ee-b1f5-56cbc384b350" />
 
 ## Step 2b — Deeper: per-institution drift, and predictive detectors
 
@@ -58,6 +64,9 @@ seasonal-naive forecaster that blindly adapts decays far less (**13%**). That
 contrast is the whole research problem in one figure: adaptation is necessary,
 and blind adaptation is exactly the surface an attacker can poison.
 
+![Predictive detectors under drift](results/step2b_predictive_decay.png)
+<img width="1650" height="750" alt="step2b_predictive_decay" src="https://github.com/user-attachments/assets/979b97cb-d85b-402f-a256-9a0c70058299" />
+
 ## Step 1b — Does the same happen in metropolitan mobile traffic?
 
 `experiments/step1b_telecom_italia.py` repeats the Step-1 measurement on the
@@ -72,6 +81,7 @@ fixed ISP networks.
 pip install -r requirements.txt
 python experiments/step1_benign_drift.py
 python experiments/step2_detector_decay.py
+python experiments/step2b_deeper_analysis.py
 python experiments/step1b_telecom_italia.py
 ```
 
@@ -98,6 +108,4 @@ to change the download directory. Plots and CSV summaries are saved to `results/
 
 Kiarash Amiri — amiri.kiarash@outlook.com — [linkedin.com/in/kiarash-amiri](https://www.linkedin.com/in/kiarash-amiri)
 
-Seven years running network and security operations for a 3,000-server,
-50-site retail estate; M.Sc. in Secure Computing. This project grew out of
-watching detection rules go stale in production.
+This project grew out of watching detection rules go stale in production.
