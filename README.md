@@ -42,6 +42,22 @@ model's alarm behaviour — point to the same weeks. A detector whose notion of
 "normal" is frozen quietly turns benign drift into operator noise; this is the
 alert-fatigue failure mode that gets real detectors switched off.
 
+## Step 2b — Deeper: per-institution drift, and predictive detectors
+
+`experiments/step2b_deeper_analysis.py` answers two objections.
+
+**Is the drift an artefact of pooling institutions?** No. Measured against each
+institution's own training baseline, **29%** of institutions sit more than two
+interquartile ranges from their own normal on the drift weeks (**48%** at the
+peak) versus 2-8% during training. The drift is broad, not a pooling artefact.
+
+**Do forecast-residual detectors (the class used in operational anomaly
+prediction) behave differently?** A frozen seasonal-profile forecaster reaches
+a **33%** false-alarm rate on the drift weeks, peaking above **50%**. A rolling
+seasonal-naive forecaster that blindly adapts decays far less (**13%**). That
+contrast is the whole research problem in one figure: adaptation is necessary,
+and blind adaptation is exactly the surface an attacker can poison.
+
 ## Step 1b — Does the same happen in metropolitan mobile traffic?
 
 `experiments/step1b_telecom_italia.py` repeats the Step-1 measurement on the
@@ -68,8 +84,8 @@ to change the download directory. Plots and CSV summaries are saved to `results/
 - Step 3: inject problem-space adversarial shift with logged ground truth and
   test whether benign and adversarial shifts are statistically separable online
   (geometry, temporal signature, cross-view cost).
-- Step 4: a drift-source-aware detector that adapts to a benign shift under a
-  forgetting bound and resisting adversarial shift under an influence cap.
+- Step 4: a drift-source-aware detector that adapts to a  benign shift under a
+  forgetting bounds and resisting adversarial shift under an influence cap.
 
 ## Data
 
