@@ -27,6 +27,10 @@ jobs:
         run: python experiments/step2_detector_decay.py
       - name: Step 2b - deeper analysis
         run: python experiments/step2b_deeper_analysis.py
+      - name: Fetch UGR'16 (real attack data)
+        run: python experiments/fetch_ugr16.py
+      - name: Step 3 - drift vs attack separability
+        run: python experiments/step3_separability.py
       - name: Figures
         run: python experiments/make_figures.py
       - name: Upload results and figures

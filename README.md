@@ -72,6 +72,34 @@ and blind adaptation is exactly the surface an attacker can poison.
 
 ![Step 2b](figures/step2b_deeper_analysis.png)
 
+## Step 3 — can we tell a real attack from benign drift?
+
+`experiments/step3_separability.py` moves to a dataset with real, labelled
+attacks: [UGR'16](https://doi.org/10.1016/j.cose.2017.11.004) — tier-3 ISP netflow
+with scheduled attacks (DoS, botnet, scans) injected into real background traffic.
+Its calibration period is the benign baseline; the test period is walked in
+10-minute windows, each labelled attack or benign from the ground-truth log
+(`labelblacklist` is background present in every single minute, so it is not
+counted as a discrete attack). The question is not "did something shift" but "is
+this shift an attack or benign drift", at a realistic 5.6% attack base rate.
+
+A naive drift detector only sees shift *magnitude* — how far a window has moved
+from normal. We compare that against the *shape* of the shift: how concentrated it
+is across features and how abruptly it arrives. With day-grouped 5-fold
+cross-validation (windows from one day never straddle train and test):
+
+| signal | PR-AUC | ROC-AUC |
+|---|---|---|
+| shift magnitude only (naive) | 0.28 | 0.69 |
+| shift **shape** (concentration + abruptness) | **0.33** | **0.75** |
+
+The shape of the shift separates attacks from benign drift better than its size:
+attacks concentrate the deviation on a few features and arrive abruptly, while
+benign drift is broad and gradual. The gap is real but modest — strengthening it
+is the open research below.
+
+![Step 3](figures/step3_separability.png)
+
 ## Run it
 
 ```bash
@@ -79,6 +107,8 @@ pip install -r requirements.txt
 python experiments/step1_benign_drift.py     # -> results/step1_benign_drift.csv
 python experiments/step2_detector_decay.py   # -> results/step2_detector_decay.csv
 python experiments/step2b_deeper_analysis.py # -> results/step2b_deeper_analysis.csv
+python experiments/fetch_ugr16.py            # downloads UGR'16 v1 into data/ugr16/ (~90 MB)
+python experiments/step3_separability.py     # -> results/step3_separability.csv
 python experiments/make_figures.py           # -> figures/*.png
 ```
 
@@ -89,23 +119,18 @@ push and uploads them as an artifact.
 
 ## Roadmap — separating the two shifts (the open problem)
 
-Steps 1–2b establish the premise: benign drift is real and it breaks static
-detectors, so adaptation is unavoidable — but blind adaptation is a poisoning
-surface. The contribution this work builds towards is telling the two shifts
-apart *online*.
+Steps 1–2b establish the premise (benign drift is real and breaks static
+detectors, so adaptation is unavoidable but blind adaptation is a poisoning
+surface); Step 3 shows a first, modest separability signal on real attacks. The
+open research is to push that signal from "real but modest" to operationally
+useful, and to close the loop with a detector.
 
-- **Step 3 — separability under logged ground truth.** Splice independently
-  collected real attack traffic (e.g. [UGR'16](https://doi.org/10.1016/j.cose.2017.11.004),
-  which injects scheduled, time-stamped attacks into a real ISP background, and
-  CTU-13 botnet flows) into the CESNET benign stream through the same aggregation
-  pipeline, with a per-episode ground-truth log. Then test whether benign and
-  adversarial episodes are separable from three signal families: temporal
-  signature (rise time, spectral concentration, calendar alignment, Hurst),
-  spatial/feature concentration (participation ratio, entropy, Gini), and
-  detector influence geometry (gradient alignment, TracIn self-influence,
-  spectral signature). Evaluate with TESSERACT-style chronological and
-  institution holdout splits, PR-AUC with block-bootstrap confidence intervals,
-  and against an adaptive, alignment-minimising adversary.
+- **Strengthen Step 3.** Add detector-influence-geometry signals (gradient
+  alignment, TracIn self-influence, spectral signature), test against an adaptive
+  alignment-minimising adversary, add hard benign confounders (server onboarding,
+  flash crowds), and report block-bootstrap confidence intervals. The current
+  signals are model-free; the influence-geometry ones need a differentiable
+  detector or a validated surrogate.
 - **Step 4 — a drift-source-aware detector** that adapts to benign shift under a
   forgetting bound while resisting adversarial shift under an influence cap.
 

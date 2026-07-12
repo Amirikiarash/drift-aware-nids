@@ -1,4 +1,5 @@
 cesnet_data/
+data/ugr16/
 __pycache__/
 *.pyc
 .DS_Store

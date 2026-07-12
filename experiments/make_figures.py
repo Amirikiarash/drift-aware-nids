@@ -57,6 +57,35 @@ def step2b():
     fig.tight_layout(); fig.savefig("figures/step2b_deeper_analysis.png"); plt.close(fig)
 
 
+def step3():
+    if not os.path.exists("results/step3_separability.csv"):
+        return
+    s = pd.read_csv("results/step3_separability.csv")
+    w = pd.read_csv("results/step3_window_signals.csv")
+    fig, ax = plt.subplots(1, 2, figsize=(11, 3.8))
+
+    labels = {"magnitude_only": "shift magnitude\n(naive)", "shape_only": "shift shape\n(ours)",
+              "all_signals": "both"}
+    x = np.arange(len(s))
+    ax[0].bar(x - 0.2, s.roc_auc, 0.4, color="#2c3e50", label="ROC-AUC")
+    ax[0].bar(x + 0.2, s.pr_auc, 0.4, color="#c0392b", label="PR-AUC")
+    ax[0].axhline(s.base_rate.iloc[0], color="#7f8c8d", ls="--", lw=1, label="random PR-AUC (base rate)")
+    ax[0].set_xticks(x); ax[0].set_xticklabels([labels.get(n, n) for n in s.signal_set], fontsize=9)
+    ax[0].set_ylabel("score"); ax[0].set_ylim(0, 1)
+    ax[0].set_title("(a) separating real attacks from benign drift (UGR'16)", loc="left", weight="bold", fontsize=10)
+    ax[0].legend(fontsize=8)
+
+    benign = w[w.is_attack == 0]["concentration"]
+    attack = w[w.is_attack == 1]["concentration"]
+    ax[1].hist(benign, bins=40, density=True, alpha=0.6, color="#16a085", label="benign drift")
+    ax[1].hist(attack, bins=40, density=True, alpha=0.6, color="#c0392b", label="attack")
+    ax[1].set_xlabel("deviation concentration across features")
+    ax[1].set_ylabel("density")
+    ax[1].set_title("(b) attacks concentrate the shift on fewer features", loc="left", weight="bold", fontsize=10)
+    ax[1].legend(fontsize=8)
+    fig.tight_layout(); fig.savefig("figures/step3_separability.png"); plt.close(fig)
+
+
 if __name__ == "__main__":
-    step1(); step2(); step2b()
-    print("wrote figures/step1_benign_drift.png, step2_detector_decay.png, step2b_deeper_analysis.png")
+    step1(); step2(); step2b(); step3()
+    print("wrote figures for steps 1, 2, 2b and 3")
