@@ -100,16 +100,45 @@ is the open research below.
 
 ![Step 3](figures/step3_separability.png)
 
+## Step 3b — deeper: influence geometry and an adaptive adversary
+
+`experiments/step3b_deep_separability.py` pushes Step 3 in the two directions a
+reviewer asks for.
+
+**An influence-geometry signal.** Step 3's signals are model-free. Here a small
+autoencoder is trained on benign traffic, and for each minute we measure how its
+update gradient behaves — its norm (how hard the point pushes the model) and its
+alignment with the average benign gradient. This is the signal an IsolationForest
+cannot give (it has no gradient), and it carries real, independent information:
+
+| signals | PR-AUC | ROC-AUC |
+|---|---|---|
+| shift magnitude (naive) | 0.30 | 0.69 |
+| shape | 0.39 | 0.76 |
+| gradient geometry | 0.37 | 0.75 |
+| shape + gradient | 0.40 | 0.77 |
+| all | **0.42** | **0.78** |
+
+**An adaptive adversary.** A static evaluation is unrealistic — a real attacker who
+knows the detector will try to look like benign drift. We model one that blends the
+attack toward the average benign profile, spending a fraction of the window on
+benign cover traffic. It works — but at a price: to pull the detector from ROC-AUC
+0.76 down to ~0.62 the attacker has to give up about 80% of the attack's intensity,
+and even then the detector stays above chance. Evasion is possible but costly.
+
+![Step 3b](figures/step3b_deep.png)
+
 ## Run it
 
 ```bash
 pip install -r requirements.txt
-python experiments/step1_benign_drift.py     # -> results/step1_benign_drift.csv
-python experiments/step2_detector_decay.py   # -> results/step2_detector_decay.csv
-python experiments/step2b_deeper_analysis.py # -> results/step2b_deeper_analysis.csv
-python experiments/fetch_ugr16.py            # downloads UGR'16 v1 into data/ugr16/ (~90 MB)
-python experiments/step3_separability.py     # -> results/step3_separability.csv
-python experiments/make_figures.py           # -> figures/*.png
+python experiments/step1_benign_drift.py         # -> results/step1_benign_drift.csv
+python experiments/step2_detector_decay.py       # -> results/step2_detector_decay.csv
+python experiments/step2b_deeper_analysis.py     # -> results/step2b_deeper_analysis.csv
+python experiments/fetch_ugr16.py                # downloads UGR'16 v1 into data/ugr16/ (~90 MB)
+python experiments/step3_separability.py         # -> results/step3_separability.csv
+python experiments/step3b_deep_separability.py   # -> results/step3b_*.csv
+python experiments/make_figures.py               # -> figures/*.png
 ```
 
 The real daily institution data (9.2 MB) is committed under `data/`, so nothing
@@ -125,12 +154,13 @@ surface); Step 3 shows a first, modest separability signal on real attacks. The
 open research is to push that signal from "real but modest" to operationally
 useful, and to close the loop with a detector.
 
-- **Strengthen Step 3.** Add detector-influence-geometry signals (gradient
-  alignment, TracIn self-influence, spectral signature), test against an adaptive
-  alignment-minimising adversary, add hard benign confounders (server onboarding,
-  flash crowds), and report block-bootstrap confidence intervals. The current
-  signals are model-free; the influence-geometry ones need a differentiable
-  detector or a validated surrogate.
+- **Finish hardening Step 3.** Step 3b adds one influence-geometry family
+  (autoencoder gradient norm and alignment) and one adaptive adversary
+  (cover-traffic). Still to do: TracIn self-influence and spectral-signature
+  signals; a fully gradient-*optimised* alignment-minimising adversary (not just
+  cover-traffic); hard benign confounders in the negative class (server
+  onboarding, flash crowds); and block-bootstrap confidence intervals on every
+  reported number.
 - **Step 4 — a drift-source-aware detector** that adapts to benign shift under a
   forgetting bound while resisting adversarial shift under an influence cap.
 

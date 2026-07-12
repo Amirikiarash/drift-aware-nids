@@ -86,6 +86,32 @@ def step3():
     fig.tight_layout(); fig.savefig("figures/step3_separability.png"); plt.close(fig)
 
 
+def step3b():
+    if not (os.path.exists("results/step3b_signals.csv") and
+            os.path.exists("results/step3b_adversary.csv")):
+        return
+    s = pd.read_csv("results/step3b_signals.csv")
+    a = pd.read_csv("results/step3b_adversary.csv")
+    fig, ax = plt.subplots(1, 2, figsize=(11, 3.8))
+
+    colors = ["#95a5a6", "#16a085", "#2980b9", "#8e44ad", "#c0392b"]
+    ax[0].bar(range(len(s)), s.roc_auc, color=colors[:len(s)])
+    ax[0].set_xticks(range(len(s))); ax[0].set_xticklabels(s.signal_set, rotation=20, fontsize=8.5)
+    ax[0].set_ylim(0.5, 0.82); ax[0].set_ylabel("ROC-AUC")
+    ax[0].set_title("(a) influence-geometry adds to shape signals", loc="left", weight="bold", fontsize=10)
+    for i, v in enumerate(s.roc_auc):
+        ax[0].text(i, v + 0.004, f"{v:.3f}", ha="center", fontsize=8)
+
+    ax[1].plot(a.attack_kept * 100, a.roc_auc, "-o", color="#c0392b", ms=5)
+    ax[1].axhline(0.5, color="0.5", ls="--", lw=1, label="chance")
+    ax[1].set_xlabel("attack intensity the adversary keeps (%)")
+    ax[1].set_ylabel("detector ROC-AUC")
+    ax[1].set_ylim(0.5, 0.8); ax[1].invert_xaxis()
+    ax[1].set_title("(b) adaptive adversary: evasion costs attack intensity", loc="left", weight="bold", fontsize=10)
+    ax[1].legend(fontsize=8)
+    fig.tight_layout(); fig.savefig("figures/step3b_deep.png"); plt.close(fig)
+
+
 if __name__ == "__main__":
-    step1(); step2(); step2b(); step3()
-    print("wrote figures for steps 1, 2, 2b and 3")
+    step1(); step2(); step2b(); step3(); step3b()
+    print("wrote figures for steps 1, 2, 2b, 3 and 3b")

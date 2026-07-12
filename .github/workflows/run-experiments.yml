@@ -31,6 +31,8 @@ jobs:
         run: python experiments/fetch_ugr16.py
       - name: Step 3 - drift vs attack separability
         run: python experiments/step3_separability.py
+      - name: Step 3b - influence geometry + adaptive adversary
+        run: python experiments/step3b_deep_separability.py
       - name: Figures
         run: python experiments/make_figures.py
       - name: Upload results and figures
