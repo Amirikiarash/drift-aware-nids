@@ -112,6 +112,23 @@ def step3b():
     fig.tight_layout(); fig.savefig("figures/step3b_deep.png"); plt.close(fig)
 
 
+def step3c():
+    if not os.path.exists("results/step3c_per_family.csv"):
+        return
+    d = pd.read_csv("results/step3c_per_family.csv").sort_values("roc_auc", ascending=False)
+    fig, ax = plt.subplots(figsize=(8, 3.6))
+    colors = ["#16a085" if v >= 0.75 else "#e67e22" if v >= 0.6 else "#c0392b" for v in d.roc_auc]
+    ax.bar(d.family, d.roc_auc, color=colors, width=0.6)
+    ax.axhline(0.5, color="0.5", ls="--", lw=1, label="chance")
+    for x, v in zip(range(len(d)), d.roc_auc):
+        ax.text(x, v + 0.02, f"{v:.2f}", ha="center", fontsize=9)
+    ax.set_ylim(0, 1.08); ax.set_ylabel("ROC-AUC")
+    ax.set_title("Step 3c - separability per attack family on UGR'16 (worst family = the honest headline)",
+                 loc="left", weight="bold", fontsize=10)
+    ax.legend(fontsize=8)
+    fig.tight_layout(); fig.savefig("figures/step3c_per_family.png"); plt.close(fig)
+
+
 if __name__ == "__main__":
-    step1(); step2(); step2b(); step3(); step3b()
-    print("wrote figures for steps 1, 2, 2b, 3 and 3b")
+    step1(); step2(); step2b(); step3(); step3b(); step3c()
+    print("wrote figures for steps 1, 2, 2b, 3, 3b and 3c")

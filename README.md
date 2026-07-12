@@ -128,6 +128,25 @@ and even then the detector stays above chance. Evasion is possible but costly.
 
 ![Step 3b](figures/step3b_deep.png)
 
+## Step 3c — the honest headline: separability per attack family
+
+A pooled number hides that some attacks are easy and others nearly invisible.
+`experiments/step3c_per_family.py` reports the discriminator's AUROC one attack
+family at a time, against a clean benign negative class (day-grouped CV):
+
+| attack family | ROC-AUC |
+|---|---|
+| port scan | 0.97–1.00 |
+| DoS | 0.82 |
+| botnet (Neris C2) | 0.58 |
+
+Scans and floods are trivially separable; stealthy botnet command-and-control is
+barely above chance. That worst-family number — not the pooled average — is the
+honest state of the art here, and it is exactly why the roadmap targets an
+adaptive, low-and-slow adversary.
+
+![Step 3c](figures/step3c_per_family.png)
+
 ## Run it
 
 ```bash
@@ -138,6 +157,7 @@ python experiments/step2b_deeper_analysis.py     # -> results/step2b_deeper_anal
 python experiments/fetch_ugr16.py                # downloads UGR'16 v1 into data/ugr16/ (~90 MB)
 python experiments/step3_separability.py         # -> results/step3_separability.csv
 python experiments/step3b_deep_separability.py   # -> results/step3b_*.csv
+python experiments/step3c_per_family.py          # -> results/step3c_per_family.csv
 python experiments/make_figures.py               # -> figures/*.png
 ```
 

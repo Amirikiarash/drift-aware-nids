@@ -33,6 +33,8 @@ jobs:
         run: python experiments/step3_separability.py
       - name: Step 3b - influence geometry + adaptive adversary
         run: python experiments/step3b_deep_separability.py
+      - name: Step 3c - separability per attack family
+        run: python experiments/step3c_per_family.py
       - name: Figures
         run: python experiments/make_figures.py
       - name: Upload results and figures
