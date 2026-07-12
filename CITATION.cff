@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "Telling Drift from Attack: measuring benign non-stationarity in real network traffic"
+message: "If you use this work, please cite it and the CESNET-TimeSeries24 dataset."
+type: software
+authors:
+  - given-names: Kiarash
+    family-names: Amiri
+    email: amiri.kiarash@outlook.com
+repository-code: "https://github.com/Amirikiarash/drift-aware-nids"
+license: MIT
+references:
+  - type: article
+    title: "CESNET-TimeSeries24: Time Series Dataset for Network Traffic Analysis"
+    authors:
+      - family-names: Koumar
+        given-names: Josef
+      - family-names: Hynek
+        given-names: Karel
+      - family-names: Čejka
+        given-names: Tomáš
+      - family-names: Šiška
+        given-names: Pavel
+    journal: "Scientific Data"
+    year: 2025
+    doi: 10.1038/s41597-025-04603-x

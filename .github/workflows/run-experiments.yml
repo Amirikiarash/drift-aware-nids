@@ -1,0 +1,39 @@
+name: run-experiments
+
+# Re-runs every experiment on the committed CESNET data in the cloud, so the
+# numbers and figures in the README are reproducible by anyone, with no local
+# setup. Outputs are uploaded as a downloadable artifact.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONHASHSEED: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Step 1 - benign drift
+        run: python experiments/step1_benign_drift.py
+      - name: Step 2 - detector decay
+        run: python experiments/step2_detector_decay.py
+      - name: Step 2b - deeper analysis
+        run: python experiments/step2b_deeper_analysis.py
+      - name: Figures
+        run: python experiments/make_figures.py
+      - name: Upload results and figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-experiment-outputs
+          path: |
+            results/
+            figures/
+          if-no-files-found: error
