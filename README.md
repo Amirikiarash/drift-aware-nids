@@ -28,7 +28,8 @@ involved, and they coincide with the Czech academic calendar:
 | 38-39 | 0.16-0.155 | start of summer vacation |
 
 Benign drift in CESNET-TimeSeries24
-<img width="1650" height="750" alt="cesnet_drift_week_over_week" src="https://github.com/user-attachments/assets/e501e83d-96f9-4a14-9abc-b000015ac031" />
+<img width="1650" height="750" alt="cesnet_drift_week_over_week" src="https://github.com/user-attachments/assets/a3bc0202-cbb4-49ea-98fe-404cdc0657b9" />
+
 
 ## Step 2 — What does that drift do to a static detector?
 
