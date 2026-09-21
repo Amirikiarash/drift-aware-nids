@@ -1,4 +1,4 @@
-"""Render the figures for Steps 1, 2 and 2b from the committed result CSVs."""
+"""Render every figure in the README from the result CSVs written by the experiments."""
 import os
 import numpy as np
 import pandas as pd
@@ -37,7 +37,7 @@ def step2():
     ax.axvline(10.5, color="0.3", lw=1.0, ls=":")
     ax.text(4.5, ax.get_ylim()[1]*0.9, "training\n(weeks 0-10)", fontsize=8.5, ha="center", color="0.3")
     ax.set_xlabel("capture week"); ax.set_ylabel("false-alarm rate (%)")
-    ax.set_title("Step 2 - a frozen IsolationForest's false alarms track benign drift (red = drift weeks)",
+    ax.set_title("Step 2 - a frozen IsolationForest's false-alarm rate (red = top-third JS weeks)",
                  loc="left", weight="bold")
     ax.legend()
     fig.tight_layout(); fig.savefig("figures/step2_detector_decay.png"); plt.close(fig)
@@ -118,17 +118,62 @@ def step3c():
     d = pd.read_csv("results/step3c_per_family.csv").sort_values("roc_auc", ascending=False)
     fig, ax = plt.subplots(figsize=(8, 3.6))
     colors = ["#16a085" if v >= 0.75 else "#e67e22" if v >= 0.6 else "#c0392b" for v in d.roc_auc]
-    ax.bar(d.family, d.roc_auc, color=colors, width=0.6)
+    yerr = None
+    if {"roc_auc_min", "roc_auc_max"} <= set(d.columns):
+        yerr = [d.roc_auc - d.roc_auc_min, d.roc_auc_max - d.roc_auc]
+    ax.bar(d.family, d.roc_auc, color=colors, width=0.6, yerr=yerr, capsize=4,
+           error_kw=dict(ecolor="0.25", lw=1))
     ax.axhline(0.5, color="0.5", ls="--", lw=1, label="chance")
     for x, v in zip(range(len(d)), d.roc_auc):
-        ax.text(x, v + 0.02, f"{v:.2f}", ha="center", fontsize=9)
+        ax.text(x + 0.2, v + 0.02, f"{v:.2f}", ha="left", fontsize=9)
     ax.set_ylim(0, 1.08); ax.set_ylabel("ROC-AUC")
-    ax.set_title("Step 3c - separability per attack family on UGR'16 (worst family = the honest headline)",
+    ax.set_title("Step 3c - separability per attack family on UGR'16 (median and range over 30 CV splits)",
                  loc="left", weight="bold", fontsize=10)
     ax.legend(fontsize=8)
     fig.tight_layout(); fig.savefig("figures/step3c_per_family.png"); plt.close(fig)
 
 
+def step1b():
+    if not os.path.exists("results/step1b_calibrated_drift.csv"):
+        return
+    d = pd.read_csv("results/step1b_calibrated_drift.csv")
+    fig, ax = plt.subplots(1, 2, figsize=(11, 3.8))
+    ax[0].plot(d.capture_week, d.js_n_flows, "-o", ms=3, color="#c0392b", label="observed JS vs week 0")
+    ax[0].plot(d.capture_week, d.js_null_p99, "--", color="0.35", lw=1.2, label="paired-permutation null, 99th pct")
+    ax[0].fill_between(d.capture_week, 0, d.js_null_p99, color="0.6", alpha=0.18)
+    ax[0].set_xlabel("capture week"); ax[0].set_ylabel("JS divergence (bits)")
+    ax[0].set_title("(a) pooled JS on daily data stays inside its own noise", loc="left", weight="bold", fontsize=10)
+    ax[0].legend(fontsize=8)
+    pct = 100 * (10 ** d.mean_log10_change - 1)
+    sig = d.level_significant_fdr.astype(bool)
+    ax[1].bar(d.capture_week[~sig], pct[~sig], color="#b2babb", width=0.8, label="not significant")
+    ax[1].bar(d.capture_week[sig], pct[sig], color="#2c3e50", width=0.8, label="significant, BH-FDR 5%")
+    ax[1].axhline(0, color="0.3", lw=0.8)
+    ax[1].set_xlabel("capture week"); ax[1].set_ylabel("mean volume change vs week 0 (%)")
+    ax[1].set_title("(b) paired per-institution test: drift in 33 of 39 weeks", loc="left", weight="bold", fontsize=10)
+    ax[1].legend(fontsize=8)
+    fig.tight_layout(); fig.savefig("figures/step1b_calibrated_drift.png"); plt.close(fig)
+
+
+def step3d():
+    if not os.path.exists("results/step3d_magnitude_matched.csv"):
+        return
+    d = pd.read_csv("results/step3d_magnitude_matched.csv")
+    m = d[d.setting == "magnitude_matched"].reset_index(drop=True)
+    fig, ax = plt.subplots(figsize=(6.5, 3.8))
+    colors = ["#95a5a6", "#16a085"]
+    err = [m.roc_auc - m.roc_ci_lo, m.roc_ci_hi - m.roc_auc]
+    ax.bar(["shift magnitude", "shift shape"], m.roc_auc, color=colors, width=0.55,
+           yerr=err, capsize=5, error_kw=dict(ecolor="0.25", lw=1.1))
+    ax.axhline(0.5, color="0.5", ls="--", lw=1, label="chance")
+    for i, v in enumerate(m.roc_auc):
+        ax.text(i + 0.3, v, f"{v:.2f}", va="center", fontsize=9)
+    ax.set_ylim(0.4, 0.85); ax.set_ylabel("ROC-AUC (95% day-block CI)")
+    ax.set_title("Step 3d - attacks vs benign shift of the same size", loc="left", weight="bold", fontsize=10)
+    ax.legend(fontsize=8, loc="upper left")
+    fig.tight_layout(); fig.savefig("figures/step3d_magnitude_matched.png"); plt.close(fig)
+
+
 if __name__ == "__main__":
-    step1(); step2(); step2b(); step3(); step3b(); step3c()
-    print("wrote figures for steps 1, 2, 2b, 3, 3b and 3c")
+    step1(); step1b(); step2(); step2b(); step3(); step3b(); step3c(); step3d()
+    print("wrote figures for steps 1, 1b, 2, 2b, 3, 3b, 3c and 3d")
